@@ -1,0 +1,332 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		941822E41D1CC8BB0090C06B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 941822E31D1CC8BB0090C06B /* main.m */; };
+		941822E71D1CC8BB0090C06B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 941822E61D1CC8BB0090C06B /* AppDelegate.m */; };
+		941822EA1D1CC8BB0090C06B /* QFShortVideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 941822E91D1CC8BB0090C06B /* QFShortVideoViewController.m */; };
+		941822ED1D1CC8BB0090C06B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 941822EB1D1CC8BB0090C06B /* Main.storyboard */; };
+		941822EF1D1CC8BB0090C06B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 941822EE1D1CC8BB0090C06B /* Assets.xcassets */; };
+		941822F21D1CC8BB0090C06B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 941822F01D1CC8BB0090C06B /* LaunchScreen.storyboard */; };
+		945300C81D23C69E002A3C67 /* QFPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 945300C71D23C69E002A3C67 /* QFPlayerView.m */; };
+		949EE1301D24C16A00B261CE /* UIImage+fix.m in Sources */ = {isa = PBXBuildFile; fileRef = 949EE12F1D24C16A00B261CE /* UIImage+fix.m */; };
+		94FD0FFF1D251E8C00CF903A /* QFTakeVideoButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		941822DF1D1CC8BB0090C06B /* QFShortVideoDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QFShortVideoDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		941822E31D1CC8BB0090C06B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		941822E51D1CC8BB0090C06B /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		941822E61D1CC8BB0090C06B /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		941822E81D1CC8BB0090C06B /* QFShortVideoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QFShortVideoViewController.h; sourceTree = "<group>"; };
+		941822E91D1CC8BB0090C06B /* QFShortVideoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = QFShortVideoViewController.m; sourceTree = "<group>"; };
+		941822EC1D1CC8BB0090C06B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		941822EE1D1CC8BB0090C06B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		941822F11D1CC8BB0090C06B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		941822F31D1CC8BB0090C06B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		945300C61D23C69E002A3C67 /* QFPlayerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFPlayerView.h; sourceTree = "<group>"; };
+		945300C71D23C69E002A3C67 /* QFPlayerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFPlayerView.m; sourceTree = "<group>"; };
+		949EE12E1D24C16A00B261CE /* UIImage+fix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+fix.h"; sourceTree = "<group>"; };
+		949EE12F1D24C16A00B261CE /* UIImage+fix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+fix.m"; sourceTree = "<group>"; };
+		94FD0FFD1D251E8C00CF903A /* QFTakeVideoButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFTakeVideoButton.h; sourceTree = "<group>"; };
+		94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFTakeVideoButton.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		941822DC1D1CC8BB0090C06B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		941822D61D1CC8BB0090C06B = {
+			isa = PBXGroup;
+			children = (
+				941822E11D1CC8BB0090C06B /* QFShortVideoDemo */,
+				941822E01D1CC8BB0090C06B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		941822E01D1CC8BB0090C06B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				941822DF1D1CC8BB0090C06B /* QFShortVideoDemo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		941822E11D1CC8BB0090C06B /* QFShortVideoDemo */ = {
+			isa = PBXGroup;
+			children = (
+				941822E51D1CC8BB0090C06B /* AppDelegate.h */,
+				941822E61D1CC8BB0090C06B /* AppDelegate.m */,
+				941822E81D1CC8BB0090C06B /* QFShortVideoViewController.h */,
+				941822E91D1CC8BB0090C06B /* QFShortVideoViewController.m */,
+				945300C61D23C69E002A3C67 /* QFPlayerView.h */,
+				945300C71D23C69E002A3C67 /* QFPlayerView.m */,
+				94FD0FFD1D251E8C00CF903A /* QFTakeVideoButton.h */,
+				94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */,
+				941822EB1D1CC8BB0090C06B /* Main.storyboard */,
+				941822EE1D1CC8BB0090C06B /* Assets.xcassets */,
+				941822F01D1CC8BB0090C06B /* LaunchScreen.storyboard */,
+				941822F31D1CC8BB0090C06B /* Info.plist */,
+				941822E21D1CC8BB0090C06B /* Supporting Files */,
+				949EE12E1D24C16A00B261CE /* UIImage+fix.h */,
+				949EE12F1D24C16A00B261CE /* UIImage+fix.m */,
+			);
+			name = QFShortVideoDemo;
+			path = QFAVPlayerDemo;
+			sourceTree = "<group>";
+		};
+		941822E21D1CC8BB0090C06B /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				941822E31D1CC8BB0090C06B /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		941822DE1D1CC8BB0090C06B /* QFShortVideoDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 941822F61D1CC8BB0090C06B /* Build configuration list for PBXNativeTarget "QFShortVideoDemo" */;
+			buildPhases = (
+				941822DB1D1CC8BB0090C06B /* Sources */,
+				941822DC1D1CC8BB0090C06B /* Frameworks */,
+				941822DD1D1CC8BB0090C06B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = QFShortVideoDemo;
+			productName = QFAVPlayerDemo;
+			productReference = 941822DF1D1CC8BB0090C06B /* QFShortVideoDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		941822D71D1CC8BB0090C06B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0730;
+				ORGANIZATIONNAME = QianFan;
+				TargetAttributes = {
+					941822DE1D1CC8BB0090C06B = {
+						CreatedOnToolsVersion = 7.3.1;
+						DevelopmentTeam = JP6B8Q8ZHH;
+					};
+				};
+			};
+			buildConfigurationList = 941822DA1D1CC8BB0090C06B /* Build configuration list for PBXProject "QFShortVideoDemo" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 941822D61D1CC8BB0090C06B;
+			productRefGroup = 941822E01D1CC8BB0090C06B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				941822DE1D1CC8BB0090C06B /* QFShortVideoDemo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		941822DD1D1CC8BB0090C06B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				941822F21D1CC8BB0090C06B /* LaunchScreen.storyboard in Resources */,
+				941822EF1D1CC8BB0090C06B /* Assets.xcassets in Resources */,
+				941822ED1D1CC8BB0090C06B /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		941822DB1D1CC8BB0090C06B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				945300C81D23C69E002A3C67 /* QFPlayerView.m in Sources */,
+				941822EA1D1CC8BB0090C06B /* QFShortVideoViewController.m in Sources */,
+				941822E71D1CC8BB0090C06B /* AppDelegate.m in Sources */,
+				941822E41D1CC8BB0090C06B /* main.m in Sources */,
+				949EE1301D24C16A00B261CE /* UIImage+fix.m in Sources */,
+				94FD0FFF1D251E8C00CF903A /* QFTakeVideoButton.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		941822EB1D1CC8BB0090C06B /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				941822EC1D1CC8BB0090C06B /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		941822F01D1CC8BB0090C06B /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				941822F11D1CC8BB0090C06B /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		941822F41D1CC8BB0090C06B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		941822F51D1CC8BB0090C06B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		941822F71D1CC8BB0090C06B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = QFAVPlayerDemo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.hualongxiang.avDemo;
+				PRODUCT_NAME = QFShortVideoDemo;
+			};
+			name = Debug;
+		};
+		941822F81D1CC8BB0090C06B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = QFAVPlayerDemo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.hualongxiang.avDemo;
+				PRODUCT_NAME = QFShortVideoDemo;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		941822DA1D1CC8BB0090C06B /* Build configuration list for PBXProject "QFShortVideoDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				941822F41D1CC8BB0090C06B /* Debug */,
+				941822F51D1CC8BB0090C06B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		941822F61D1CC8BB0090C06B /* Build configuration list for PBXNativeTarget "QFShortVideoDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				941822F71D1CC8BB0090C06B /* Debug */,
+				941822F81D1CC8BB0090C06B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 941822D71D1CC8BB0090C06B /* Project object */;
+}
