@@ -10,6 +10,7 @@
 
 @interface QFShortVideoViewController : UIViewController
 
+@property (nonatomic,assign)CGFloat minLenght;//视频最长时长 default is 1
 @property (nonatomic,assign)CGFloat maxLenght;//视频最长时长 default is 6
 
 @end

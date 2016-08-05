@@ -52,6 +52,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     [super viewDidLoad];
     _widthHeightScale = 0.75f;
     _prePublishVideoWidth = 100;
+    _minLenght = 1.0f;
     _maxLenght = 6.0f;
     _recordingColor = [UIColor greenColor];
     _cancelColor = [UIColor redColor];
@@ -370,7 +371,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 }
 - (void)QFTakeVideoButtonDidTouchUpInside{//手指在范围内离开
     NSTimeInterval timeinterval = [[NSDate date]timeIntervalSinceDate:self.lastStartDate];
-    if (timeinterval < 1) {
+    if (timeinterval < _minLenght) {
         //时间太短：手指不要放开
         self.illegalLabel.alpha = 1;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{

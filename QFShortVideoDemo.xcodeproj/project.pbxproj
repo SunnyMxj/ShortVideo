@@ -14,7 +14,6 @@
 		941822EF1D1CC8BB0090C06B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 941822EE1D1CC8BB0090C06B /* Assets.xcassets */; };
 		941822F21D1CC8BB0090C06B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 941822F01D1CC8BB0090C06B /* LaunchScreen.storyboard */; };
 		945300C81D23C69E002A3C67 /* QFPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 945300C71D23C69E002A3C67 /* QFPlayerView.m */; };
-		949EE1301D24C16A00B261CE /* UIImage+fix.m in Sources */ = {isa = PBXBuildFile; fileRef = 949EE12F1D24C16A00B261CE /* UIImage+fix.m */; };
 		94FD0FFF1D251E8C00CF903A /* QFTakeVideoButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */; };
 /* End PBXBuildFile section */
 
@@ -31,8 +30,6 @@
 		941822F31D1CC8BB0090C06B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		945300C61D23C69E002A3C67 /* QFPlayerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFPlayerView.h; sourceTree = "<group>"; };
 		945300C71D23C69E002A3C67 /* QFPlayerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFPlayerView.m; sourceTree = "<group>"; };
-		949EE12E1D24C16A00B261CE /* UIImage+fix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+fix.h"; sourceTree = "<group>"; };
-		949EE12F1D24C16A00B261CE /* UIImage+fix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+fix.m"; sourceTree = "<group>"; };
 		94FD0FFD1D251E8C00CF903A /* QFTakeVideoButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFTakeVideoButton.h; sourceTree = "<group>"; };
 		94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFTakeVideoButton.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -80,8 +77,6 @@
 				941822F01D1CC8BB0090C06B /* LaunchScreen.storyboard */,
 				941822F31D1CC8BB0090C06B /* Info.plist */,
 				941822E21D1CC8BB0090C06B /* Supporting Files */,
-				949EE12E1D24C16A00B261CE /* UIImage+fix.h */,
-				949EE12F1D24C16A00B261CE /* UIImage+fix.m */,
 			);
 			name = QFShortVideoDemo;
 			path = QFAVPlayerDemo;
@@ -170,7 +165,6 @@
 				941822EA1D1CC8BB0090C06B /* QFShortVideoViewController.m in Sources */,
 				941822E71D1CC8BB0090C06B /* AppDelegate.m in Sources */,
 				941822E41D1CC8BB0090C06B /* main.m in Sources */,
-				949EE1301D24C16A00B261CE /* UIImage+fix.m in Sources */,
 				94FD0FFF1D251E8C00CF903A /* QFTakeVideoButton.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

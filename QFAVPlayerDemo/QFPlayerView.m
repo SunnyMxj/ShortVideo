@@ -8,7 +8,6 @@
 
 #import "QFPlayerView.h"
 #import <AVFoundation/AVFoundation.h>
-#import "UIImage+fix.h"
 
 @interface QFPlayerView()
 
@@ -129,9 +128,9 @@
         return nil;
     }
     CMTimeShow(actualTime);
-    UIImage *image = [UIImage imageWithCGImage:cgImage scale:[UIScreen mainScreen].scale orientation:UIImageOrientationRight];//转化为UIImage
+    UIImage *image = [UIImage imageWithCGImage:cgImage scale:[UIScreen mainScreen].scale orientation:UIImageOrientationUp];//转化为UIImage
     CGImageRelease(cgImage);
-    return [UIImage fixOrientation:image];
+    return image;
 }
 
 @end
