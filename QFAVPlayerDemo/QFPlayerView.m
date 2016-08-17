@@ -128,7 +128,7 @@
         return nil;
     }
     CMTimeShow(actualTime);
-    UIImage *image = [UIImage imageWithCGImage:cgImage scale:[UIScreen mainScreen].scale orientation:UIImageOrientationUp];//转化为UIImage
+    UIImage *image = [UIImage imageWithCGImage:cgImage];//转化为UIImage
     CGImageRelease(cgImage);
     return image;
 }

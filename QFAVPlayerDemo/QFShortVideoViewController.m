@@ -358,36 +358,29 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         [_captureSession addOutput:_audioDataOutput];
     }
     _audioConnection = [_audioDataOutput connectionWithMediaType:AVMediaTypeAudio];
-}
+    
+    NSInteger numPixels = _targetSize.width * _targetSize.height;
+    //每像素比特
+    CGFloat bitsPerPixel = 4.05;
+    //This bitrate approximately matches the quality produced by AVCaptureSessionPresetMedium or Low. ---10.1 for AVCaptureSessionPresetHigh
+    NSInteger bitsPerSecond = numPixels * bitsPerPixel;
+    
+    //码率和帧率设置
+    NSDictionary *compressionProperties = @{ AVVideoAverageBitRateKey : @(bitsPerSecond),
+                                             AVVideoExpectedSourceFrameRateKey : @(30),
+                                             AVVideoMaxKeyFrameIntervalKey : @(30) };
+    NSDictionary *videoOutputSetting = @{ AVVideoCodecKey : AVVideoCodecH264,
+                                          AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
+                                          AVVideoWidthKey : @(_targetSize.height),
+                                          AVVideoHeightKey : @(_targetSize.width),
+                                          AVVideoCompressionPropertiesKey : compressionProperties};
+    _videoInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoOutputSetting];
+    _videoInput.expectsMediaDataInRealTime = YES;
+    _videoInput.transform = CGAffineTransformMakeRotation(M_PI_2);
 
-- (AVAssetWriterInput *)videoInput{
-    if (!_videoInput) {
-        NSInteger numPixels = _targetSize.width * _targetSize.height;
-        //每像素比特
-        CGFloat bitsPerPixel = 6.0;
-        NSInteger bitsPerSecond = numPixels * bitsPerPixel;
-        
-        //码率和帧率设置
-        NSDictionary *compressionProperties = @{ AVVideoAverageBitRateKey : @(bitsPerSecond),
-                                                 AVVideoExpectedSourceFrameRateKey : @(30) };
-        NSDictionary *videoOutputSetting = @{ AVVideoCodecKey : AVVideoCodecH264,
-                                             AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
-                                             AVVideoWidthKey : @(_targetSize.height),
-                                             AVVideoHeightKey : @(_targetSize.width),
-                                             AVVideoCompressionPropertiesKey : compressionProperties};
-        _videoInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoOutputSetting];
-        _videoInput.expectsMediaDataInRealTime = YES;
-        _videoInput.transform = CGAffineTransformMakeRotation(M_PI_2);
-    }
-    return _videoInput;
-}
-
-- (AVAssetWriterInput *)audioInput{
-    if (!_audioInput) {
-        _audioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:nil];
-        _audioInput.expectsMediaDataInRealTime = YES;
-    }
-    return _audioInput;
+    NSDictionary *audioOutputSetting = [_audioDataOutput recommendedAudioSettingsForAssetWriterWithOutputFileType:AVFileTypeMPEG4];
+    _audioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioOutputSetting];
+    _audioInput.expectsMediaDataInRealTime = YES;
 }
 
 - (void)startRecord{
@@ -395,11 +388,11 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     if (_dataOutput) {
         NSError *error = nil;
         _assetWriter = [[AVAssetWriter alloc] initWithURL:fileURL fileType:AVFileTypeQuickTimeMovie error:&error];
-        if ([_assetWriter canAddInput:self.videoInput]) {
-            [_assetWriter addInput:self.videoInput];
+        if ([_assetWriter canAddInput:_videoInput]) {
+            [_assetWriter addInput:_videoInput];
         }
-        if ([_assetWriter canAddInput:self.audioInput]) {
-            [_assetWriter addInput:self.audioInput];
+        if ([_assetWriter canAddInput:_audioInput]) {
+            [_assetWriter addInput:_audioInput];
         }
         [_assetWriter startWriting];
         _startRecording = NO;
@@ -442,8 +435,10 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
             __weak typeof(self) weakSelf = self;
             [_assetWriter finishWritingWithCompletionHandler:^{
-                [weakSelf cropVideoWithFilrURL:weakSelf.assetWriter.outputURL];
-                weakSelf.assetWriter = nil;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf prepareToPublishWithFileURL:weakSelf.assetWriter.outputURL];
+                    weakSelf.assetWriter = nil;
+                });
             }];
         });
         [_captureSession stopRunning];
@@ -539,12 +534,12 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
             _startRecording = YES;
             [_assetWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
         }
-        if (self.videoInput.readyForMoreMediaData) {
-            [self.videoInput appendSampleBuffer:sampleBuffer];
+        if (_videoInput.readyForMoreMediaData) {
+            [_videoInput appendSampleBuffer:sampleBuffer];
         }
     } else if (connection == _audioConnection) {
-        if (self.audioInput.readyForMoreMediaData) {
-            [self.audioInput appendSampleBuffer:sampleBuffer];
+        if (_audioInput.readyForMoreMediaData) {
+            [_audioInput appendSampleBuffer:sampleBuffer];
         }
     }
 }
@@ -617,8 +612,8 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         });
         [self deleteVideoFileWithFileURL:fileURL];
         NSLog(@"Export done!");
-        ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc]init];
-        [assetsLibrary writeVideoAtPathToSavedPhotosAlbum:[NSURL fileURLWithPath:outputFilePath] completionBlock:NULL];
+//        ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc]init];
+//        [assetsLibrary writeVideoAtPathToSavedPhotosAlbum:fileURL completionBlock:NULL];
     }];
 }
 
