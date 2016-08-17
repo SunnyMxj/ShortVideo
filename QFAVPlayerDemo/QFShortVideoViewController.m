@@ -442,7 +442,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
             __weak typeof(self) weakSelf = self;
             [_assetWriter finishWritingWithCompletionHandler:^{
-                [weakSelf compressVideoWithFilrURL:weakSelf.assetWriter.outputURL crop:NO];
+                [weakSelf cropVideoWithFilrURL:weakSelf.assetWriter.outputURL];
                 weakSelf.assetWriter = nil;
             }];
         });
@@ -559,7 +559,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     if (self.isCanceled) {
         [self deleteVideoFileWithFileURL:outputFileURL];
     } else {
-        [self compressVideoWithFilrURL:outputFileURL crop:YES];
+        [self cropVideoWithFilrURL:outputFileURL];
     }
 }
 
@@ -574,48 +574,42 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     return nil;
 }
 
-#pragma mark -- compress video
+#pragma mark -- crop video
 //crop video
-- (void)compressVideoWithFilrURL:(NSURL *)fileURL crop:(BOOL)crop{
+- (void)cropVideoWithFilrURL:(NSURL *)fileURL {
     if (![[NSFileManager defaultManager] fileExistsAtPath:[fileURL.absoluteString substringFromIndex:7]]){
         return;
     }
     // input file
     AVAsset *asset = [AVAsset assetWithURL:fileURL];
     AVMutableVideoComposition *videoComposition;
-    if (crop) {
-        // input clip
-        AVAssetTrack *clipVideoTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] firstObject];
-        
-        // make it square
-        videoComposition = [AVMutableVideoComposition videoComposition];
-        videoComposition.renderSize = CGSizeMake(clipVideoTrack.naturalSize.height, clipVideoTrack.naturalSize.height * _widthHeightScale);
-        videoComposition.frameDuration = CMTimeMake(1, 30);
-        
-        AVMutableVideoCompositionInstruction *instruction = [AVMutableVideoCompositionInstruction videoCompositionInstruction];
-        instruction.timeRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(60, 30) );
-        
-        // rotate to portrait
-        AVMutableVideoCompositionLayerInstruction *transformer = [AVMutableVideoCompositionLayerInstruction videoCompositionLayerInstructionWithAssetTrack:clipVideoTrack];
-        CGAffineTransform t1 = CGAffineTransformMakeTranslation(clipVideoTrack.naturalSize.height, -(clipVideoTrack.naturalSize.width - clipVideoTrack.naturalSize.height * _widthHeightScale) /2 );
-        CGAffineTransform t2 = CGAffineTransformRotate(t1, M_PI_2);
-        
-        CGAffineTransform finalTransform = t2;
-        [transformer setTransform:finalTransform atTime:kCMTimeZero];
-        instruction.layerInstructions = [NSArray arrayWithObject:transformer];
-        videoComposition.instructions = [NSArray arrayWithObject:instruction];
-    }
+    // input clip
+    AVAssetTrack *clipVideoTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] firstObject];
     
+    // make it square
+    videoComposition = [AVMutableVideoComposition videoComposition];
+    videoComposition.renderSize = CGSizeMake(clipVideoTrack.naturalSize.height, clipVideoTrack.naturalSize.height * _widthHeightScale);
+    videoComposition.frameDuration = CMTimeMake(1, 30);
+    
+    AVMutableVideoCompositionInstruction *instruction = [AVMutableVideoCompositionInstruction videoCompositionInstruction];
+    instruction.timeRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(60, 30) );
+    
+    // rotate to portrait
+    AVMutableVideoCompositionLayerInstruction *transformer = [AVMutableVideoCompositionLayerInstruction videoCompositionLayerInstructionWithAssetTrack:clipVideoTrack];
+    CGAffineTransform t1 = CGAffineTransformMakeTranslation(clipVideoTrack.naturalSize.height, -(clipVideoTrack.naturalSize.width - clipVideoTrack.naturalSize.height * _widthHeightScale) /2 );
+    CGAffineTransform t2 = CGAffineTransformRotate(t1, M_PI_2);
+    
+    CGAffineTransform finalTransform = t2;
+    [transformer setTransform:finalTransform atTime:kCMTimeZero];
+    instruction.layerInstructions = [NSArray arrayWithObject:transformer];
+    videoComposition.instructions = [NSArray arrayWithObject:instruction];
     
     // export
     NSString *outputFilePath = [self outputFilePath];
     AVAssetExportSession *exporter = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetMediumQuality];
     exporter.outputFileType = AVFileTypeMPEG4;
-    if (crop) {
-        exporter.videoComposition = videoComposition;
-    }
+    exporter.videoComposition = videoComposition;
     exporter.outputURL = [NSURL fileURLWithPath:outputFilePath];
-    exporter.outputFileType = AVFileTypeQuickTimeMovie;
     
     [exporter exportAsynchronouslyWithCompletionHandler:^(void){
         dispatch_async(dispatch_get_main_queue(), ^{
