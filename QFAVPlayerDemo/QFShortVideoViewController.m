@@ -17,15 +17,27 @@
 
 typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 
-@interface QFShortVideoViewController ()<AVCaptureFileOutputRecordingDelegate,QFTakeVideoButtonDelegate>
+@interface QFShortVideoViewController ()<AVCaptureFileOutputRecordingDelegate,QFTakeVideoButtonDelegate,AVCaptureVideoDataOutputSampleBufferDelegate,AVCaptureAudioDataOutputSampleBufferDelegate>
 
-@property (nonatomic,assign)CGFloat widthHeightScale;//视频的宽高比
 @property (nonatomic,assign)CGFloat prePublishVideoWidth;//发布前预览视频宽度
 
 @property (nonatomic,strong)AVCaptureSession *captureSession;//负责输入和输入设备之间的数据传递
 @property (nonatomic,strong)AVCaptureDeviceInput *captureDeviceInput;//负责从captureDevice获得输入数据
-@property (nonatomic,strong)AVCaptureMovieFileOutput *captureMovieFileOutput;//视频输出流
 @property (nonatomic,strong)AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;//相机拍摄预览图层
+//fileOutput
+@property (nonatomic,strong)AVCaptureMovieFileOutput *captureMovieFileOutput;//视频输出流
+//dataOutput
+@property (nonatomic,strong) dispatch_queue_t videoDataOutputQueue;
+@property (nonatomic,strong) dispatch_queue_t audioDataOutputQueue;
+@property (nonatomic,strong) AVCaptureVideoDataOutput *videoDataOutput;
+@property (nonatomic,strong) AVCaptureAudioDataOutput *audioDataOutput;
+@property (nonatomic,strong) AVCaptureConnection *audioConnection;
+@property (nonatomic,strong) AVCaptureConnection *videoConnection;
+@property (nonatomic,strong) AVAssetWriter *assetWriter;
+@property (nonatomic,strong) AVAssetWriterInput *videoInput;
+@property (nonatomic,strong) AVAssetWriterInput *audioInput;
+@property (nonatomic,assign) BOOL isRecording;
+@property (nonatomic,assign) BOOL startRecording;
 
 @property (nonatomic,strong)UIView *preView;//上部预览视图
 @property (nonatomic,strong)UILabel *tipLabel;//提示label
@@ -48,14 +60,43 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     [self removeTimer];
 }
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
+- (instancetype)init{
+    self = [super init];
+    if (self) {
+        [self setup];
+    }
+    return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder{
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        [self setup];
+    }
+    return self;
+}
+
+- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        [self setup];
+    }
+    return self;
+}
+
+- (void)setup{
     _widthHeightScale = 0.75f;
     _prePublishVideoWidth = 100;
     _minLenght = 1.0f;
     _maxLenght = 6.0f;
     _recordingColor = [UIColor greenColor];
     _cancelColor = [UIColor redColor];
+    _targetSize = CGSizeMake(320, 240);
+    _dataOutput = YES;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
     
     [self makeUI];
     
@@ -269,18 +310,10 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         return;
     }
     
-    //初始化输出对象
-    _captureMovieFileOutput = [[AVCaptureMovieFileOutput alloc]init];
-    
-    
     //将设备输入添加到会话中
     if ([_captureSession canAddInput:_captureDeviceInput]) {
         [_captureSession addInput:_captureDeviceInput];
         [_captureSession addInput:audiocaptureDeviceInput];
-        AVCaptureConnection *captureConnection = [_captureMovieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-        if ([captureConnection isVideoStabilizationSupported]) {
-            captureConnection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
-        }
     }
     
     //创建视频预览层
@@ -289,40 +322,135 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     _captureVideoPreviewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;//填充模式
     [_preView.layer insertSublayer:_captureVideoPreviewLayer below:_focusCursor.layer];
     
-    //将设备输出添加到会话中
-    if ([_captureSession canAddOutput:_captureMovieFileOutput]) {
-        [_captureSession addOutput:_captureMovieFileOutput];
+    //初始化输出对象
+    if (_dataOutput) {
+        [self initDataOutput];
+    } else {
+        _captureMovieFileOutput = [[AVCaptureMovieFileOutput alloc]init];
+        AVCaptureConnection *captureConnection = [_captureMovieFileOutput connectionWithMediaType:AVMediaTypeVideo];
+        if ([captureConnection isVideoStabilizationSupported]) {
+            captureConnection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
+        }
+        //将设备输出添加到会话中
+        if ([_captureSession canAddOutput:_captureMovieFileOutput]) {
+            [_captureSession addOutput:_captureMovieFileOutput];
+        }
     }
 }
 
+- (void)initDataOutput{
+    _videoDataOutputQueue = dispatch_queue_create( "com.qianfan.videodata", DISPATCH_QUEUE_SERIAL);
+    //        dispatch_set_target_queue(_videoDataOutputQueue, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
+    _audioDataOutputQueue = dispatch_queue_create( "com.qianfan.audiodata", DISPATCH_QUEUE_SERIAL);
+    
+    _videoDataOutput = [AVCaptureVideoDataOutput new];
+    _videoDataOutput.videoSettings = nil;
+    _videoDataOutput.alwaysDiscardsLateVideoFrames = NO;
+    [_videoDataOutput setSampleBufferDelegate:self queue:_videoDataOutputQueue];
+    if ([_captureSession canAddOutput:_videoDataOutput]) {
+        [_captureSession addOutput:_videoDataOutput];
+    }
+    _videoConnection = [_videoDataOutput connectionWithMediaType:AVMediaTypeVideo];
+    
+    _audioDataOutput = [AVCaptureAudioDataOutput new];
+    [_audioDataOutput setSampleBufferDelegate:self queue:_audioDataOutputQueue];
+    if ([_captureSession canAddOutput:_audioDataOutput]) {
+        [_captureSession addOutput:_audioDataOutput];
+    }
+    _audioConnection = [_audioDataOutput connectionWithMediaType:AVMediaTypeAudio];
+}
+
+- (AVAssetWriterInput *)videoInput{
+    if (!_videoInput) {
+        NSInteger numPixels = _targetSize.width * _targetSize.height;
+        //每像素比特
+        CGFloat bitsPerPixel = 6.0;
+        NSInteger bitsPerSecond = numPixels * bitsPerPixel;
+        
+        //码率和帧率设置
+        NSDictionary *compressionProperties = @{ AVVideoAverageBitRateKey : @(bitsPerSecond),
+                                                 AVVideoExpectedSourceFrameRateKey : @(30) };
+        NSDictionary *videoOutputSetting = @{ AVVideoCodecKey : AVVideoCodecH264,
+                                             AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
+                                             AVVideoWidthKey : @(_targetSize.height),
+                                             AVVideoHeightKey : @(_targetSize.width),
+                                             AVVideoCompressionPropertiesKey : compressionProperties};
+        _videoInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoOutputSetting];
+        _videoInput.expectsMediaDataInRealTime = YES;
+        _videoInput.transform = CGAffineTransformMakeRotation(M_PI_2);
+    }
+    return _videoInput;
+}
+
+- (AVAssetWriterInput *)audioInput{
+    if (!_audioInput) {
+        _audioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:nil];
+        _audioInput.expectsMediaDataInRealTime = YES;
+    }
+    return _audioInput;
+}
+
 - (void)startRecord{
-    //根据设备输出获得连接
-    AVCaptureConnection *captureConnection = [self.captureMovieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-    //根据连接取得设备输出的数据
-    if (!self.captureMovieFileOutput.isRecording) {
-        //预览图层和视频方向保持一致
-        captureConnection.videoOrientation = AVCaptureVideoOrientationPortrait;//[self.captureVideoPreviewLayer connection].videoOrientation;
-        NSURL *fileURL = [NSURL fileURLWithPath:[self tempFilePath]];
-        [self.captureMovieFileOutput startRecordingToOutputFileURL:fileURL recordingDelegate:self];
+    NSURL *fileURL = [NSURL fileURLWithPath:[self tempFilePath]];
+    if (_dataOutput) {
+        NSError *error = nil;
+        _assetWriter = [[AVAssetWriter alloc] initWithURL:fileURL fileType:AVFileTypeQuickTimeMovie error:&error];
+        if ([_assetWriter canAddInput:self.videoInput]) {
+            [_assetWriter addInput:self.videoInput];
+        }
+        if ([_assetWriter canAddInput:self.audioInput]) {
+            [_assetWriter addInput:self.audioInput];
+        }
+        [_assetWriter startWriting];
+        _startRecording = NO;
+        _isRecording = YES;
         [self setupTimer];
         [self startAnimation];
     } else {
-        //停止保存
-        [self.captureMovieFileOutput stopRecording];
+        //根据设备输出获得连接
+        AVCaptureConnection *captureConnection = [_captureMovieFileOutput connectionWithMediaType:AVMediaTypeVideo];
+        //根据连接取得设备输出的数据
+        if (!_captureMovieFileOutput.isRecording) {
+            //预览图层和视频方向保持一致
+            captureConnection.videoOrientation = AVCaptureVideoOrientationPortrait;//[self.captureVideoPreviewLayer connection].videoOrientation;
+            [_captureMovieFileOutput startRecordingToOutputFileURL:fileURL recordingDelegate:self];
+            [self setupTimer];
+            [self startAnimation];
+        } else {
+            //停止保存
+            [_captureMovieFileOutput stopRecording];
+        }
     }
 }
 
 
 - (void)cancelRecord{
     self.isCanceled = YES;
-    [self.captureMovieFileOutput stopRecording];
+    if (_dataOutput) {
+        _isRecording = NO;
+        [_assetWriter cancelWriting];
+        _assetWriter = nil;
+    } else {
+        [_captureMovieFileOutput stopRecording];
+    }
     [self removeTimer];
     [self stopAnimation];
 }
 
 - (void)saveRecord{
-    self.isCanceled = NO;
-    [_captureSession stopRunning];
+    if (_dataOutput) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            __weak typeof(self) weakSelf = self;
+            [_assetWriter finishWritingWithCompletionHandler:^{
+                [weakSelf compressVideoWithFilrURL:weakSelf.assetWriter.outputURL crop:NO];
+                weakSelf.assetWriter = nil;
+            }];
+        });
+        [_captureSession stopRunning];
+    } else {
+        self.isCanceled = NO;
+        [_captureSession stopRunning];
+    }
 }
 
 - (void)setupTimer{
@@ -401,6 +529,26 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     self.tipLabel.backgroundColor = _cancelColor;
 }
 
+#pragma mark -- AVCaptureVideoDataOutputSampleBufferDelegate / AVCaptureAudioDataOutputSampleBufferDelegate
+- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection{
+    if (!_isRecording) {
+        return;
+    }
+    if (connection == _videoConnection) {
+        if (!_startRecording) {
+            _startRecording = YES;
+            [_assetWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
+        }
+        if (self.videoInput.readyForMoreMediaData) {
+            [self.videoInput appendSampleBuffer:sampleBuffer];
+        }
+    } else if (connection == _audioConnection) {
+        if (self.audioInput.readyForMoreMediaData) {
+            [self.audioInput appendSampleBuffer:sampleBuffer];
+        }
+    }
+}
+
 #pragma mark -- AVCaptureFileOutputRecordingDelegate
 - (void)captureOutput:(AVCaptureFileOutput *)captureOutput didStartRecordingToOutputFileAtURL:(NSURL *)fileURL fromConnections:(NSArray *)connections{
     NSLog(@"开始save了，地址是：%@",fileURL);
@@ -411,7 +559,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     if (self.isCanceled) {
         [self deleteVideoFileWithFileURL:outputFileURL];
     } else {
-        [self cropVideoWithFilrURL:outputFileURL];
+        [self compressVideoWithFilrURL:outputFileURL crop:YES];
     }
 }
 
@@ -426,44 +574,46 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     return nil;
 }
 
-#pragma mark -- crop video
+#pragma mark -- compress video
 //crop video
-- (void)cropVideoWithFilrURL:(NSURL *)fileURL{
+- (void)compressVideoWithFilrURL:(NSURL *)fileURL crop:(BOOL)crop{
     if (![[NSFileManager defaultManager] fileExistsAtPath:[fileURL.absoluteString substringFromIndex:7]]){
         return;
     }
     // input file
     AVAsset *asset = [AVAsset assetWithURL:fileURL];
+    AVMutableVideoComposition *videoComposition;
+    if (crop) {
+        // input clip
+        AVAssetTrack *clipVideoTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] firstObject];
+        
+        // make it square
+        videoComposition = [AVMutableVideoComposition videoComposition];
+        videoComposition.renderSize = CGSizeMake(clipVideoTrack.naturalSize.height, clipVideoTrack.naturalSize.height * _widthHeightScale);
+        videoComposition.frameDuration = CMTimeMake(1, 30);
+        
+        AVMutableVideoCompositionInstruction *instruction = [AVMutableVideoCompositionInstruction videoCompositionInstruction];
+        instruction.timeRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(60, 30) );
+        
+        // rotate to portrait
+        AVMutableVideoCompositionLayerInstruction *transformer = [AVMutableVideoCompositionLayerInstruction videoCompositionLayerInstructionWithAssetTrack:clipVideoTrack];
+        CGAffineTransform t1 = CGAffineTransformMakeTranslation(clipVideoTrack.naturalSize.height, -(clipVideoTrack.naturalSize.width - clipVideoTrack.naturalSize.height * _widthHeightScale) /2 );
+        CGAffineTransform t2 = CGAffineTransformRotate(t1, M_PI_2);
+        
+        CGAffineTransform finalTransform = t2;
+        [transformer setTransform:finalTransform atTime:kCMTimeZero];
+        instruction.layerInstructions = [NSArray arrayWithObject:transformer];
+        videoComposition.instructions = [NSArray arrayWithObject:instruction];
+    }
     
-    AVMutableComposition *composition = [AVMutableComposition composition];
-    [composition  addMutableTrackWithMediaType:AVMediaTypeVideo preferredTrackID:kCMPersistentTrackID_Invalid];
-    
-    // input clip
-    AVAssetTrack *clipVideoTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
-    
-    // make it square
-    AVMutableVideoComposition *videoComposition = [AVMutableVideoComposition videoComposition];
-    videoComposition.renderSize = CGSizeMake(clipVideoTrack.naturalSize.height, clipVideoTrack.naturalSize.height * _widthHeightScale);
-    videoComposition.frameDuration = CMTimeMake(1, 30);
-    
-    AVMutableVideoCompositionInstruction *instruction = [AVMutableVideoCompositionInstruction videoCompositionInstruction];
-    instruction.timeRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(60, 30) );
-    
-    // rotate to portrait
-    AVMutableVideoCompositionLayerInstruction *transformer = [AVMutableVideoCompositionLayerInstruction videoCompositionLayerInstructionWithAssetTrack:clipVideoTrack];
-    CGAffineTransform t1 = CGAffineTransformMakeTranslation(clipVideoTrack.naturalSize.height, -(clipVideoTrack.naturalSize.width - clipVideoTrack.naturalSize.height * _widthHeightScale) /2 );
-    CGAffineTransform t2 = CGAffineTransformRotate(t1, M_PI_2);
-    
-    CGAffineTransform finalTransform = t2;
-    [transformer setTransform:finalTransform atTime:kCMTimeZero];
-    instruction.layerInstructions = [NSArray arrayWithObject:transformer];
-    videoComposition.instructions = [NSArray arrayWithObject:instruction];
     
     // export
     NSString *outputFilePath = [self outputFilePath];
     AVAssetExportSession *exporter = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetMediumQuality];
     exporter.outputFileType = AVFileTypeMPEG4;
-    exporter.videoComposition = videoComposition;
+    if (crop) {
+        exporter.videoComposition = videoComposition;
+    }
     exporter.outputURL = [NSURL fileURLWithPath:outputFilePath];
     exporter.outputFileType = AVFileTypeQuickTimeMovie;
     
@@ -473,13 +623,8 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         });
         [self deleteVideoFileWithFileURL:fileURL];
         NSLog(@"Export done!");
-//        ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc]init];
-//        [assetsLibrary writeVideoAtPathToSavedPhotosAlbum:[NSURL fileURLWithPath:outputFilePath] completionBlock:^(NSURL *assetURL, NSError *error) {
-//            if (error) {
-//                NSLog(@"保存视频到相簿过程中发生错误，错误信息：%@",error.localizedDescription);
-//            }
-//            NSLog(@"成功保存视频到相簿.");
-//        }];
+        ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc]init];
+        [assetsLibrary writeVideoAtPathToSavedPhotosAlbum:[NSURL fileURLWithPath:outputFilePath] completionBlock:NULL];
     }];
 }
 
