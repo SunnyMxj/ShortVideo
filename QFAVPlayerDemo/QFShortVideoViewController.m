@@ -387,7 +387,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     NSURL *fileURL = [NSURL fileURLWithPath:[self tempFilePath]];
     if (_dataOutput) {
         NSError *error = nil;
-        _assetWriter = [[AVAssetWriter alloc] initWithURL:fileURL fileType:AVFileTypeQuickTimeMovie error:&error];
+        _assetWriter = [[AVAssetWriter alloc] initWithURL:fileURL fileType:AVFileTypeMPEG4 error:&error];
         if ([_assetWriter canAddInput:_videoInput]) {
             [_assetWriter addInput:_videoInput];
         }
