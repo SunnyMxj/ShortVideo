@@ -11,6 +11,7 @@
 #import <AssetsLibrary/AssetsLibrary.h>
 #import "QFPlayerView.h"
 #import "QFTakeVideoButton.h"
+#import <CoreMotion/CoreMotion.h>
 
 #define kScreenWidth    [UIScreen mainScreen].bounds.size.width
 #define kScreenHeight   [UIScreen mainScreen].bounds.size.height
@@ -20,6 +21,12 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 @interface QFShortVideoViewController ()<AVCaptureFileOutputRecordingDelegate,QFTakeVideoButtonDelegate,AVCaptureVideoDataOutputSampleBufferDelegate,AVCaptureAudioDataOutputSampleBufferDelegate>
 
 @property (nonatomic,assign)CGFloat prePublishVideoWidth;//发布前预览视频宽度
+@property (nonatomic,strong)CMMotionManager *motionManager;//重力感应
+@property (nonatomic,assign)double lastX;
+@property (nonatomic,assign)double lastY;
+@property (nonatomic,assign)double lastZ;
+@property (nonatomic,assign)BOOL needFocus;//标记 是否需要重新聚焦
+@property (atomic,assign)BOOL isFocusing;//标记 是否正在聚焦
 
 @property (nonatomic,strong)AVCaptureSession *captureSession;//负责输入和输入设备之间的数据传递
 @property (nonatomic,strong)AVCaptureDeviceInput *captureDeviceInput;//负责从captureDevice获得输入数据
@@ -101,7 +108,62 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     [self makeUI];
     
     [self prepareToRecord];
+    
+    [self addAutoFocus];
+    
+    [self checkAuthorization];
+}
 
+- (void)addAutoFocus{
+    _motionManager = [[CMMotionManager alloc]init];
+    if (!_motionManager.accelerometerAvailable) {
+        _motionManager = nil;
+        return;
+    }
+    _motionManager.deviceMotionUpdateInterval = 1/10;//更新间隔
+    __weak typeof(self) weakSelf = self;
+    [_motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue currentQueue] withHandler:^(CMDeviceMotion * _Nullable motion, NSError * _Nullable error) {
+        static double moveThreshold = 0.2;
+        static double staticThreshold = 0.02;
+        if (motion.userAcceleration.x > moveThreshold
+            || motion.userAcceleration.y > moveThreshold
+            || motion.userAcceleration.z > moveThreshold
+            || motion.rotationRate.x > moveThreshold
+            || motion.rotationRate.y > moveThreshold
+            || motion.rotationRate.z > moveThreshold) {
+            weakSelf.needFocus = YES;
+        } else if (motion.userAcceleration.x < staticThreshold
+                   && motion.userAcceleration.y < staticThreshold
+                   && motion.userAcceleration.z < staticThreshold
+                   && motion.rotationRate.x < staticThreshold
+                   && motion.rotationRate.y < staticThreshold
+                   && motion.rotationRate.z < staticThreshold ) {
+            [weakSelf prepareFocus];
+        }
+    }];
+}
+
+- (void)prepareFocus{
+    if (!_needFocus) {
+        return;
+    }
+    _needFocus = NO;
+    [self focusActionWithPoint:CGPointMake(_preView.bounds.size.width/2, _preView.bounds.size.height/2)];
+}
+
+- (BOOL)checkAuthorization{
+    BOOL allowed = NO;
+    AVAuthorizationStatus videoAuthorizationStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    AVAuthorizationStatus audioAuthorizationStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
+    if ((videoAuthorizationStatus == AVAuthorizationStatusAuthorized || videoAuthorizationStatus == AVAuthorizationStatusNotDetermined)
+        && (audioAuthorizationStatus == AVAuthorizationStatusAuthorized || audioAuthorizationStatus == AVAuthorizationStatusNotDetermined)) {
+        allowed = YES;
+    }
+    if (!allowed) {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"请在iPhone的\"设置-隐私\"选项中，允许访问你的摄像头和麦克风。" message:@"" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil];
+        [alert show];
+    }
+    return allowed;
 }
 
 - (void)viewDidAppear:(BOOL)animated{
@@ -115,7 +177,6 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
             }
         });
     }
-    [self setFocusCursorWithPoint:_preView.center];
     [self changeDeviceProperty:^(AVCaptureDevice *captureDevice) {
         if ([captureDevice isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
             [captureDevice setFocusMode:AVCaptureFocusModeAutoFocus];
@@ -194,10 +255,21 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
  */
 - (void)focusAction:(UITapGestureRecognizer *)tap{
     CGPoint point = [tap locationInView:self.preView];
+    [self focusActionWithPoint:point];
+}
+
+- (void)focusActionWithPoint:(CGPoint)point{
+    if (self.isFocusing) {
+        return;
+    }
+    self.isFocusing = YES;
     //将UI坐标转化为摄像头坐标
     CGPoint cameraPoint= [self.captureVideoPreviewLayer captureDevicePointOfInterestForPoint:point];
     [self setFocusCursorWithPoint:point];
     [self focusWithMode:AVCaptureFocusModeAutoFocus exposureMode:AVCaptureExposureModeAutoExpose atPoint:cameraPoint];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self.isFocusing = NO;
+    });
 }
 
 - (void)zoomAction:(UITapGestureRecognizer *)doubleTap{
@@ -488,6 +560,9 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 
 #pragma mark -- QFTakeVideoButtonDelegate
 - (void)QFTakeVideoButtonDidTouchDown{//按下
+    if (![self checkAuthorization]) {
+        return;
+    }
     self.lastStartDate = [NSDate date];
     //开始录制：上移取消
     [self startRecord];
