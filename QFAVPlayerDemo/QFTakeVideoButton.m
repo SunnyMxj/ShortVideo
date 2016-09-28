@@ -7,6 +7,7 @@
 //
 
 #import "QFTakeVideoButton.h"
+#import "QFDevice.h"
 
 @interface QFTakeVideoButton()
 
@@ -29,12 +30,14 @@
 
 - (void)touchDown{
     NSLog(@"touchDown");
-    [UIView animateWithDuration:0.3 animations:^{
-        self.transform = CGAffineTransformMakeScale(2, 2);
-        self.alpha = 0;
-    } completion:^(BOOL finished) {
-        self.transform = CGAffineTransformIdentity;
-    }];
+    if (![QFDevice isSingleCore]) {
+        [UIView animateWithDuration:0.3 animations:^{
+            self.transform = CGAffineTransformMakeScale(2, 2);
+            self.alpha = 0;
+        } completion:^(BOOL finished) {
+            self.transform = CGAffineTransformIdentity;
+        }];
+    }
     if ([self.delegate respondsToSelector:@selector(QFTakeVideoButtonDidTouchDown)]) {
         [self.delegate QFTakeVideoButtonDidTouchDown];
     }
@@ -45,6 +48,9 @@
         [self touchUpOutside];
     } else {
         [self touchUpInside];
+    }
+    if ([QFDevice isSingleCore]) {
+        return;
     }
     self.transform = CGAffineTransformMakeScale(2, 2);
     [UIView animateWithDuration:0.3 animations:^{
@@ -85,6 +91,9 @@
 
 
 - (void)touchWithSender:(UIButton *)sender event:(UIEvent *)event{
+    if (![event isKindOfClass:[UIEvent class]]) {
+        return;
+    }
     UITouch *touch = [[event allTouches] anyObject];
     CGFloat boundsExtension = 10.0f;
     CGRect outerBounds = CGRectInset(sender.bounds, -1 * boundsExtension, -1 * boundsExtension);

@@ -12,6 +12,7 @@
 #import "QFPlayerView.h"
 #import "QFTakeVideoButton.h"
 #import <CoreMotion/CoreMotion.h>
+#import "QFDevice.h"
 
 #define kScreenWidth    [UIScreen mainScreen].bounds.size.width
 #define kScreenHeight   [UIScreen mainScreen].bounds.size.height
@@ -43,8 +44,8 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 @property (nonatomic,strong) AVAssetWriter *assetWriter;
 @property (nonatomic,strong) AVAssetWriterInput *videoInput;
 @property (nonatomic,strong) AVAssetWriterInput *audioInput;
-@property (nonatomic,assign) BOOL isRecording;
-@property (nonatomic,assign) BOOL startRecording;
+@property (atomic,assign) BOOL isRecording;
+@property (atomic,assign) BOOL startRecording;
 
 @property (nonatomic,strong)UIView *preView;//上部预览视图
 @property (nonatomic,strong)UILabel *tipLabel;//提示label
@@ -56,6 +57,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 @property (nonatomic,strong)QFTakeVideoButton *takeButton;//摄像按钮
 
 @property (nonatomic,weak)NSTimer *timer;
+@property (nonatomic,weak)NSTimer *otherTimer;
 @property (nonatomic,strong)NSDate *lastStartDate;//上次开始录制时间
 @property (nonatomic,assign)BOOL isCanceled;//是否取消录制了
 
@@ -109,7 +111,9 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     
     [self prepareToRecord];
     
-    [self addAutoFocus];
+    if (![QFDevice isSingleCore]) {
+        [self addAutoFocus];
+    }
     
     [self checkAuthorization];
 }
@@ -288,14 +292,22 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
  *  @param point 光标位置
  */
 -(void)setFocusCursorWithPoint:(CGPoint)point{
-    self.focusCursor.center = point;
-    self.focusCursor.transform = CGAffineTransformMakeScale(1.5, 1.5);
-    self.focusCursor.alpha = 1.0;
-    [UIView animateWithDuration:0.4 animations:^{
-        self.focusCursor.transform = CGAffineTransformIdentity;
-    } completion:^(BOOL finished) {
-        self.focusCursor.alpha = 0;
-    }];
+    if ([QFDevice isSingleCore]) {
+        self.focusCursor.center = point;
+        self.focusCursor.alpha = 1.0;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            self.focusCursor.alpha = 0;
+        });
+    } else {
+        self.focusCursor.center = point;
+        self.focusCursor.transform = CGAffineTransformMakeScale(1.5, 1.5);
+        self.focusCursor.alpha = 1.0;
+        [UIView animateWithDuration:0.4 animations:^{
+            self.focusCursor.transform = CGAffineTransformIdentity;
+        } completion:^(BOOL finished) {
+            self.focusCursor.alpha = 0;
+        }];
+    }
 }
 
 /**
@@ -350,8 +362,14 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 - (void)prepareToRecord{
     //初始化会话
     _captureSession = [[AVCaptureSession alloc]init];
-    if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720]) {//设置分辨率
-        [_captureSession setSessionPreset:AVCaptureSessionPreset1280x720];
+    if ([QFDevice isSingleCore]) {
+        if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset640x480]) {//设置分辨率
+            [_captureSession setSessionPreset:AVCaptureSessionPreset640x480];
+        }
+    } else {
+        if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720]) {//设置分辨率
+            [_captureSession setSessionPreset:AVCaptureSessionPreset1280x720];
+        }
     }
     
     //获取输入设备
@@ -412,7 +430,6 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 
 - (void)initDataOutput{
     _videoDataOutputQueue = dispatch_queue_create( "com.qianfan.videodata", DISPATCH_QUEUE_SERIAL);
-    //        dispatch_set_target_queue(_videoDataOutputQueue, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
     _audioDataOutputQueue = dispatch_queue_create( "com.qianfan.audiodata", DISPATCH_QUEUE_SERIAL);
     
     _videoDataOutput = [AVCaptureVideoDataOutput new];
@@ -467,8 +484,8 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
             [_assetWriter addInput:_audioInput];
         }
         [_assetWriter startWriting];
-        _startRecording = NO;
-        _isRecording = YES;
+        self.startRecording = NO;
+        self.isRecording = YES;
         [self setupTimer];
         [self startAnimation];
     } else {
@@ -492,7 +509,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 - (void)cancelRecord{
     self.isCanceled = YES;
     if (_dataOutput) {
-        _isRecording = NO;
+        self.isRecording = NO;
         [_assetWriter cancelWriting];
         _assetWriter = nil;
     } else {
@@ -504,6 +521,8 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 
 - (void)saveRecord{
     if (_dataOutput) {
+        self.isRecording = NO;
+        [_captureSession stopRunning];
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
             __weak typeof(self) weakSelf = self;
             [_assetWriter finishWritingWithCompletionHandler:^{
@@ -513,7 +532,6 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
                 });
             }];
         });
-        [_captureSession stopRunning];
     } else {
         self.isCanceled = NO;
         [_captureSession stopRunning];
@@ -531,11 +549,16 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     self.processLineView.frame = CGRectMake(0, self.processLineView.frame.origin.y, kScreenWidth, self.processLineView.frame.size.height);
     self.processLineView.backgroundColor = _recordingColor;
     self.processLineView.alpha = 1;
-    [UIView animateWithDuration:_maxLenght animations:^{
-        self.processLineView.frame = CGRectMake(kScreenWidth/2, self.processLineView.frame.origin.y, 0, self.processLineView.frame.size.height);
-    } completion:^(BOOL finished) {
-        self.processLineView.alpha = 0;
-    }];
+    if ([QFDevice isSingleCore]) {
+        [[NSRunLoop currentRunLoop]addTimer:(self.otherTimer = [NSTimer timerWithTimeInterval:1 target:self selector:@selector(fakeAnimation) userInfo:nil repeats:YES]) forMode:NSRunLoopCommonModes];
+    } else {
+        [UIView animateWithDuration:_maxLenght animations:^{
+            self.processLineView.frame = CGRectMake(kScreenWidth/2, self.processLineView.frame.origin.y, 0, self.processLineView.frame.size.height);
+        } completion:^(BOOL finished) {
+            self.processLineView.alpha = 0;
+        }];
+    }
+
     self.illegalLabel.alpha = 0;
     self.tipLabel.alpha = 1;
     self.tipLabel.text = @"↑上移取消";
@@ -543,19 +566,36 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     self.tipLabel.backgroundColor = nil;
 }
 
+- (void)fakeAnimation {
+    CGFloat deltaWidth = kScreenWidth/2/_maxLenght;
+    self.processLineView.frame = CGRectMake(self.processLineView.frame.origin.x + deltaWidth, self.processLineView.frame.origin.y, self.processLineView.frame.size.width - 2*deltaWidth, self.processLineView.frame.size.height);
+}
+
 - (void)removeTimer{
     if (self.timer) {
         [self.timer invalidate];
         self.timer = nil;
     }
+    if (self.otherTimer) {
+        [self.otherTimer invalidate];
+        self.otherTimer = nil;
+    }
 }
 
 - (void)stopAnimation{
-    [self.processLineView.layer removeAllAnimations];
-    self.processLineView.alpha = 0;
-    [UIView animateWithDuration:0.4 animations:^{
+    if ([QFDevice isSingleCore]) {
+        self.processLineView.alpha = 0;
         self.tipLabel.alpha = 0;
-    }];
+        if (self.otherTimer) {
+            self.otherTimer.fireDate = [NSDate distantFuture];
+        }
+    } else {
+        [self.processLineView.layer removeAllAnimations];
+        self.processLineView.alpha = 0;
+        [UIView animateWithDuration:0.4 animations:^{
+            self.tipLabel.alpha = 0;
+        }];
+    }
 }
 
 #pragma mark -- QFTakeVideoButtonDelegate
@@ -601,14 +641,14 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 
 #pragma mark -- AVCaptureVideoDataOutputSampleBufferDelegate / AVCaptureAudioDataOutputSampleBufferDelegate
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection{
-    if (!_isRecording) {
+    if (!self.isRecording) {
         return;
     }
+    if (!self.startRecording) {
+        self.startRecording = YES;
+        [_assetWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
+    }
     if (connection == _videoConnection) {
-        if (!_startRecording) {
-            _startRecording = YES;
-            [_assetWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
-        }
         if (_videoInput.readyForMoreMediaData) {
             [_videoInput appendSampleBuffer:sampleBuffer];
         }

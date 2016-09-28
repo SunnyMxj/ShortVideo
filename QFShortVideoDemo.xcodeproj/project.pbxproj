@@ -13,6 +13,7 @@
 		941822ED1D1CC8BB0090C06B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 941822EB1D1CC8BB0090C06B /* Main.storyboard */; };
 		941822EF1D1CC8BB0090C06B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 941822EE1D1CC8BB0090C06B /* Assets.xcassets */; };
 		941822F21D1CC8BB0090C06B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 941822F01D1CC8BB0090C06B /* LaunchScreen.storyboard */; };
+		9437AABF1D9BB4B00000A0F2 /* QFDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 9437AABE1D9BB4B00000A0F2 /* QFDevice.m */; };
 		945300C81D23C69E002A3C67 /* QFPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 945300C71D23C69E002A3C67 /* QFPlayerView.m */; };
 		94FD0FFF1D251E8C00CF903A /* QFTakeVideoButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */; };
 /* End PBXBuildFile section */
@@ -28,6 +29,8 @@
 		941822EE1D1CC8BB0090C06B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		941822F11D1CC8BB0090C06B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		941822F31D1CC8BB0090C06B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9437AABD1D9BB4B00000A0F2 /* QFDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFDevice.h; sourceTree = "<group>"; };
+		9437AABE1D9BB4B00000A0F2 /* QFDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFDevice.m; sourceTree = "<group>"; };
 		945300C61D23C69E002A3C67 /* QFPlayerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFPlayerView.h; sourceTree = "<group>"; };
 		945300C71D23C69E002A3C67 /* QFPlayerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFPlayerView.m; sourceTree = "<group>"; };
 		94FD0FFD1D251E8C00CF903A /* QFTakeVideoButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFTakeVideoButton.h; sourceTree = "<group>"; };
@@ -72,6 +75,8 @@
 				945300C71D23C69E002A3C67 /* QFPlayerView.m */,
 				94FD0FFD1D251E8C00CF903A /* QFTakeVideoButton.h */,
 				94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */,
+				9437AABD1D9BB4B00000A0F2 /* QFDevice.h */,
+				9437AABE1D9BB4B00000A0F2 /* QFDevice.m */,
 				941822EB1D1CC8BB0090C06B /* Main.storyboard */,
 				941822EE1D1CC8BB0090C06B /* Assets.xcassets */,
 				941822F01D1CC8BB0090C06B /* LaunchScreen.storyboard */,
@@ -163,6 +168,7 @@
 			files = (
 				945300C81D23C69E002A3C67 /* QFPlayerView.m in Sources */,
 				941822EA1D1CC8BB0090C06B /* QFShortVideoViewController.m in Sources */,
+				9437AABF1D9BB4B00000A0F2 /* QFDevice.m in Sources */,
 				941822E71D1CC8BB0090C06B /* AppDelegate.m in Sources */,
 				941822E41D1CC8BB0090C06B /* main.m in Sources */,
 				94FD0FFF1D251E8C00CF903A /* QFTakeVideoButton.m in Sources */,
