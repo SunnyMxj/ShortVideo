@@ -9,32 +9,62 @@
 #import "QFVideoDecoder.h"
 #import <AVFoundation/AVFoundation.h>
 
+@interface QFVideoDecoder()
+
+@property (nonatomic,assign)BOOL finishReading;
+@property (nonatomic,assign)float durationInSeconds;
+@property (nonatomic,assign)NSUInteger currentIndex;
+@property (nonatomic,strong)NSMutableArray *imageArray;
+@property (nonatomic,strong)CADisplayLink *displayLink;
+@property (nonatomic,strong)AVAssetReader *reader;
+
+@end
+
 @implementation QFVideoDecoder
 
 - (void)startDecodeWithVideoURL:(NSURL *)url {
     AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:nil];
     NSError *error;
-    AVAssetReader *reader = [[AVAssetReader alloc] initWithAsset:asset error:&error];
+    if (_reader) {
+        [_reader cancelReading];
+        _reader = nil;
+    }
+    _reader = [[AVAssetReader alloc] initWithAsset:asset error:&error];
     NSArray *videoTracks = [asset tracksWithMediaType:AVMediaTypeVideo];
     AVAssetTrack *videoTrack = [videoTracks objectAtIndex:0];
     
     int m_pixelFormatType = kCVPixelFormatType_32BGRA;
     NSDictionary *options = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt: (int)m_pixelFormatType] forKey:(id)kCVPixelBufferPixelFormatTypeKey];
     AVAssetReaderTrackOutput *videoReaderOutput = [[AVAssetReaderTrackOutput alloc] initWithTrack:videoTrack outputSettings:options];
-    [reader addOutput:videoReaderOutput];
-    [reader startReading];
+    [_reader addOutput:videoReaderOutput];
+    [_reader startReading];
+    
+    _finishReading = NO;
+    _currentIndex = 0;
+    _durationInSeconds = CMTimeGetSeconds(asset.duration);
+    
+    if (!_imageArray) {
+        _imageArray = [NSMutableArray array];
+    } else {
+        [_imageArray removeAllObjects];
+    }
+    
+    if (self.displayLink) {
+        [self.displayLink invalidate];
+        self.displayLink = nil;
+    }
+    
+    self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(fakeplay)];
+    self.displayLink.frameInterval = rintf(60/videoTrack.nominalFrameRate);
+    [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
     
     // 读取视频每一个buffer转换成CGImageRef
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NSMutableArray *imageArray = [NSMutableArray array];
-        
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         CMSampleBufferRef audioSampleBuffer = NULL;
-        while ([reader status] == AVAssetReaderStatusReading && videoTrack.nominalFrameRate > 0) {
+        NSLog(@"test start");
+        while ([_reader status] == AVAssetReaderStatusReading && videoTrack.nominalFrameRate > 0) {
             CMSampleBufferRef sampleBuffer = [videoReaderOutput copyNextSampleBuffer];
             CGImageRef image = [self imageFromSampleBuffer:sampleBuffer];
-            if (self.delegate && [self.delegate respondsToSelector:@selector(decoder:onNewVideoFrameReady:)]) {
-                [self.delegate decoder:self onNewVideoFrameReady:image];
-            }
             if(sampleBuffer) {
                 if(audioSampleBuffer) { // release old buffer.
                     CFRelease(audioSampleBuffer);
@@ -44,18 +74,31 @@
             } else {
                 break;
             }
-            
-            // 休眠的间隙刚好是每一帧的间隔
-#warning TODO cadisplaylink
-            [NSThread sleepForTimeInterval:CMTimeGetSeconds(videoTrack.minFrameDuration)];
-            [imageArray addObject:(__bridge id _Nullable)image];
+//            [NSThread sleepForTimeInterval:CMTimeGetSeconds(videoTrack.minFrameDuration)];
+            [_imageArray addObject:(__bridge id _Nullable)image];
         }
-        // decode finish
-        float durationInSeconds = CMTimeGetSeconds(asset.duration);
-        if (self.delegate && [self.delegate respondsToSelector:@selector(decoder:didFinishDecodeWithImages:duration:)]) {
-            [self.delegate decoder:self didFinishDecodeWithImages:imageArray duration:durationInSeconds];
-        }
+        _finishReading = YES;
     });
+}
+
+- (void)fakeplay {
+    NSLog(@"current index is %zd",_currentIndex);
+    if (_imageArray.count > _currentIndex) {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(decoder:onNewVideoFrameReady:)]) {
+            [self.delegate decoder:self onNewVideoFrameReady:(CGImageRef)_imageArray[_currentIndex]];
+        }
+        _currentIndex++;
+    }
+    if (_finishReading && (_currentIndex >= _imageArray.count-1)) {
+        NSLog(@"is finish");
+        if (self.delegate && [self.delegate respondsToSelector:@selector(decoder:didFinishDecodeWithImages:duration:)]) {
+            [self.delegate decoder:self didFinishDecodeWithImages:_imageArray duration:_durationInSeconds];
+        }
+        if (self.displayLink) {
+            [self.displayLink invalidate];
+            self.displayLink = nil;
+        }
+    }
 }
 
 - (CGImageRef)imageFromSampleBuffer:(CMSampleBufferRef)sampleBuffer {
@@ -75,42 +118,44 @@
     
     CGContextRelease(context);
     CGColorSpaceRelease(colorSpace);
-    return [self CGImageRotatedByAngle:image angle:-90];
+    
+    if (width < height) {//需要顺时针旋转90 ⤼
+        return [self CGImageRotatedByAngle:image angle:-90 fitSize:YES];
+    } else{
+        return image;
+    }
 }
 
-- (CGImageRef)CGImageRotatedByAngle:(CGImageRef)imgRef angle:(CGFloat)angle{
-#warning TODO
-    CGFloat angleInRadians = angle * (M_PI / 180);
-    CGFloat width = CGImageGetWidth(imgRef);
-    CGFloat height = CGImageGetHeight(imgRef);
-    
-    CGRect imgRect = CGRectMake(0, 0, width, height);
-    CGAffineTransform transform = CGAffineTransformMakeRotation(angleInRadians);
-    CGRect rotatedRect = CGRectApplyAffineTransform(imgRect, transform);
+- (CGImageRef)CGImageRotatedByAngle:(CGImageRef)imgRef angle:(CGFloat)angle fitSize:(BOOL)fitSize{
+    CGFloat radians = angle * (M_PI / 180);
+    size_t width = (size_t)CGImageGetWidth(imgRef);
+    size_t height = (size_t)CGImageGetHeight(imgRef);
+    CGRect newRect = CGRectApplyAffineTransform(CGRectMake(0., 0., width, height),
+                                                fitSize ? CGAffineTransformMakeRotation(radians) : CGAffineTransformIdentity);
     
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    
-    CGContextRef bmContext = CGBitmapContextCreate(NULL,
-                                                   rotatedRect.size.width,
-                                                   rotatedRect.size.height,
-                                                   8,
-                                                   0,
-                                                   colorSpace,
-                                                   kCGImageAlphaPremultipliedFirst);
-//    CGContextSetAllowsAntialiasing(bmContext, YES);
-//    CGContextSetShouldAntialias(bmContext, YES);
-//    CGContextSetInterpolationQuality(bmContext, kCGInterpolationHigh);
+    CGContextRef context = CGBitmapContextCreate(NULL,
+                                                 (size_t)newRect.size.width,
+                                                 (size_t)newRect.size.height,
+                                                 8,
+                                                 (size_t)newRect.size.width * 4,
+                                                 colorSpace,
+                                                 kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedFirst);
     CGColorSpaceRelease(colorSpace);
-    CGContextTranslateCTM(bmContext, +(rotatedRect.size.width/2), +(rotatedRect.size.height/2));
-    CGContextRotateCTM(bmContext, angleInRadians);
-    CGContextTranslateCTM(bmContext, -(rotatedRect.size.height/2), -(rotatedRect.size.width/2));
-    CGContextDrawImage(bmContext, CGRectMake(0, 0, rotatedRect.size.width, rotatedRect.size.height), imgRef);
+    if (!context) return nil;
     
+    CGContextSetShouldAntialias(context, true);
+    CGContextSetAllowsAntialiasing(context, true);
+    CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
     
-    CGImageRef rotatedImage = CGBitmapContextCreateImage(bmContext);
-    CFRelease(bmContext);
+    CGContextTranslateCTM(context, +(newRect.size.width * 0.5), +(newRect.size.height * 0.5));
+    CGContextRotateCTM(context, radians);
     
-    return rotatedImage;
+    CGContextDrawImage(context, CGRectMake(-(width * 0.5), -(height * 0.5), width, height), imgRef);
+    CGImageRef targetImageRef = CGBitmapContextCreateImage(context);
+    CGContextRelease(context);
+    CGImageRelease(imgRef);
+    return targetImageRef;
 }
 
 @end
