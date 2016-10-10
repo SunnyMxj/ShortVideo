@@ -15,6 +15,10 @@
 		941822F21D1CC8BB0090C06B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 941822F01D1CC8BB0090C06B /* LaunchScreen.storyboard */; };
 		9437AABF1D9BB4B00000A0F2 /* QFDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 9437AABE1D9BB4B00000A0F2 /* QFDevice.m */; };
 		945300C81D23C69E002A3C67 /* QFPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 945300C71D23C69E002A3C67 /* QFPlayerView.m */; };
+		949049751DAB6CF3005FB0FA /* demo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 949049741DAB6CF3005FB0FA /* demo.mp4 */; };
+		949049781DAB6DA5005FB0FA /* QFShortVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 949049771DAB6DA5005FB0FA /* QFShortVideoView.m */; };
+		9490497B1DAB70B2005FB0FA /* RootViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9490497A1DAB70B2005FB0FA /* RootViewController.m */; };
+		9490497E1DAB76CA005FB0FA /* QFVideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 9490497D1DAB76CA005FB0FA /* QFVideoDecoder.m */; };
 		94FD0FFF1D251E8C00CF903A /* QFTakeVideoButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +37,13 @@
 		9437AABE1D9BB4B00000A0F2 /* QFDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFDevice.m; sourceTree = "<group>"; };
 		945300C61D23C69E002A3C67 /* QFPlayerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFPlayerView.h; sourceTree = "<group>"; };
 		945300C71D23C69E002A3C67 /* QFPlayerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFPlayerView.m; sourceTree = "<group>"; };
+		949049741DAB6CF3005FB0FA /* demo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = demo.mp4; sourceTree = "<group>"; };
+		949049761DAB6DA5005FB0FA /* QFShortVideoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFShortVideoView.h; sourceTree = "<group>"; };
+		949049771DAB6DA5005FB0FA /* QFShortVideoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFShortVideoView.m; sourceTree = "<group>"; };
+		949049791DAB70B2005FB0FA /* RootViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RootViewController.h; sourceTree = "<group>"; };
+		9490497A1DAB70B2005FB0FA /* RootViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RootViewController.m; sourceTree = "<group>"; };
+		9490497C1DAB76CA005FB0FA /* QFVideoDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFVideoDecoder.h; sourceTree = "<group>"; };
+		9490497D1DAB76CA005FB0FA /* QFVideoDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFVideoDecoder.m; sourceTree = "<group>"; };
 		94FD0FFD1D251E8C00CF903A /* QFTakeVideoButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QFTakeVideoButton.h; sourceTree = "<group>"; };
 		94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QFTakeVideoButton.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -67,18 +78,17 @@
 		941822E11D1CC8BB0090C06B /* QFShortVideoDemo */ = {
 			isa = PBXGroup;
 			children = (
+				949049731DAB6C33005FB0FA /* View */,
+				949049721DAB6C17005FB0FA /* Utility */,
 				941822E51D1CC8BB0090C06B /* AppDelegate.h */,
 				941822E61D1CC8BB0090C06B /* AppDelegate.m */,
+				949049791DAB70B2005FB0FA /* RootViewController.h */,
+				9490497A1DAB70B2005FB0FA /* RootViewController.m */,
 				941822E81D1CC8BB0090C06B /* QFShortVideoViewController.h */,
 				941822E91D1CC8BB0090C06B /* QFShortVideoViewController.m */,
-				945300C61D23C69E002A3C67 /* QFPlayerView.h */,
-				945300C71D23C69E002A3C67 /* QFPlayerView.m */,
-				94FD0FFD1D251E8C00CF903A /* QFTakeVideoButton.h */,
-				94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */,
-				9437AABD1D9BB4B00000A0F2 /* QFDevice.h */,
-				9437AABE1D9BB4B00000A0F2 /* QFDevice.m */,
 				941822EB1D1CC8BB0090C06B /* Main.storyboard */,
 				941822EE1D1CC8BB0090C06B /* Assets.xcassets */,
+				949049741DAB6CF3005FB0FA /* demo.mp4 */,
 				941822F01D1CC8BB0090C06B /* LaunchScreen.storyboard */,
 				941822F31D1CC8BB0090C06B /* Info.plist */,
 				941822E21D1CC8BB0090C06B /* Supporting Files */,
@@ -93,6 +103,30 @@
 				941822E31D1CC8BB0090C06B /* main.m */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		949049721DAB6C17005FB0FA /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				9437AABD1D9BB4B00000A0F2 /* QFDevice.h */,
+				9437AABE1D9BB4B00000A0F2 /* QFDevice.m */,
+				9490497C1DAB76CA005FB0FA /* QFVideoDecoder.h */,
+				9490497D1DAB76CA005FB0FA /* QFVideoDecoder.m */,
+			);
+			name = Utility;
+			sourceTree = "<group>";
+		};
+		949049731DAB6C33005FB0FA /* View */ = {
+			isa = PBXGroup;
+			children = (
+				945300C61D23C69E002A3C67 /* QFPlayerView.h */,
+				945300C71D23C69E002A3C67 /* QFPlayerView.m */,
+				94FD0FFD1D251E8C00CF903A /* QFTakeVideoButton.h */,
+				94FD0FFE1D251E8C00CF903A /* QFTakeVideoButton.m */,
+				949049761DAB6DA5005FB0FA /* QFShortVideoView.h */,
+				949049771DAB6DA5005FB0FA /* QFShortVideoView.m */,
+			);
+			name = View;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -153,6 +187,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				949049751DAB6CF3005FB0FA /* demo.mp4 in Resources */,
 				941822F21D1CC8BB0090C06B /* LaunchScreen.storyboard in Resources */,
 				941822EF1D1CC8BB0090C06B /* Assets.xcassets in Resources */,
 				941822ED1D1CC8BB0090C06B /* Main.storyboard in Resources */,
@@ -168,10 +203,13 @@
 			files = (
 				945300C81D23C69E002A3C67 /* QFPlayerView.m in Sources */,
 				941822EA1D1CC8BB0090C06B /* QFShortVideoViewController.m in Sources */,
+				9490497B1DAB70B2005FB0FA /* RootViewController.m in Sources */,
 				9437AABF1D9BB4B00000A0F2 /* QFDevice.m in Sources */,
 				941822E71D1CC8BB0090C06B /* AppDelegate.m in Sources */,
 				941822E41D1CC8BB0090C06B /* main.m in Sources */,
 				94FD0FFF1D251E8C00CF903A /* QFTakeVideoButton.m in Sources */,
+				9490497E1DAB76CA005FB0FA /* QFVideoDecoder.m in Sources */,
+				949049781DAB6DA5005FB0FA /* QFShortVideoView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

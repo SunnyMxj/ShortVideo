@@ -520,10 +520,13 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 }
 
 - (void)saveRecord{
+    if (!_captureSession.isRunning) {
+        return;
+    }
     if (_dataOutput) {
         self.isRecording = NO;
         [_captureSession stopRunning];
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             __weak typeof(self) weakSelf = self;
             [_assetWriter finishWritingWithCompletionHandler:^{
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -536,6 +539,12 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         self.isCanceled = NO;
         [_captureSession stopRunning];
     }
+    _takeButton.enabled = NO;
+    _focusCursor.hidden = YES;
+    
+    //结束录制
+    [self removeTimer];
+    [self stopAnimation];
 }
 
 - (void)setupTimer{
@@ -644,16 +653,16 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     if (!self.isRecording) {
         return;
     }
-    if (!self.startRecording) {
-        self.startRecording = YES;
-        [_assetWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
-    }
     if (connection == _videoConnection) {
+        if (!self.startRecording) {
+            self.startRecording = YES;
+            [_assetWriter startSessionAtSourceTime:CMSampleBufferGetPresentationTimeStamp(sampleBuffer)];
+        }
         if (_videoInput.readyForMoreMediaData) {
             [_videoInput appendSampleBuffer:sampleBuffer];
         }
     } else if (connection == _audioConnection) {
-        if (_audioInput.readyForMoreMediaData) {
+        if (self.startRecording && _audioInput.readyForMoreMediaData) {
             [_audioInput appendSampleBuffer:sampleBuffer];
         }
     }
