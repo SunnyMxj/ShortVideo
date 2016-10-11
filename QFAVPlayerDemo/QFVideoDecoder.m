@@ -46,6 +46,9 @@
     if (!_imageArray) {
         _imageArray = [NSMutableArray array];
     } else {
+        for (id image in _imageArray) {
+            CGImageRelease((CGImageRef)image);
+        }
         [_imageArray removeAllObjects];
     }
     
@@ -61,7 +64,6 @@
     // 读取视频每一个buffer转换成CGImageRef
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         CMSampleBufferRef audioSampleBuffer = NULL;
-        NSLog(@"test start");
         while ([_reader status] == AVAssetReaderStatusReading && videoTrack.nominalFrameRate > 0) {
             CMSampleBufferRef sampleBuffer = [videoReaderOutput copyNextSampleBuffer];
             CGImageRef image = [self imageFromSampleBuffer:sampleBuffer];
@@ -74,15 +76,16 @@
             } else {
                 break;
             }
+//            for test
 //            [NSThread sleepForTimeInterval:CMTimeGetSeconds(videoTrack.minFrameDuration)];
             [_imageArray addObject:(__bridge id _Nullable)image];
         }
         _finishReading = YES;
+        CFRelease(audioSampleBuffer);
     });
 }
 
 - (void)fakeplay {
-    NSLog(@"current index is %zd",_currentIndex);
     if (_imageArray.count > _currentIndex) {
         if (self.delegate && [self.delegate respondsToSelector:@selector(decoder:onNewVideoFrameReady:)]) {
             [self.delegate decoder:self onNewVideoFrameReady:(CGImageRef)_imageArray[_currentIndex]];
@@ -90,7 +93,6 @@
         _currentIndex++;
     }
     if (_finishReading && (_currentIndex >= _imageArray.count-1)) {
-        NSLog(@"is finish");
         if (self.delegate && [self.delegate respondsToSelector:@selector(decoder:didFinishDecodeWithImages:duration:)]) {
             [self.delegate decoder:self didFinishDecodeWithImages:_imageArray duration:_durationInSeconds];
         }
