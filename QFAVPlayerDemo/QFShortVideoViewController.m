@@ -13,6 +13,7 @@
 #import "QFTakeVideoButton.h"
 #import <CoreMotion/CoreMotion.h>
 #import "QFDevice.h"
+#import "NewTakeVideoViewController.h"
 
 #define kScreenWidth    [UIScreen mainScreen].bounds.size.width
 #define kScreenHeight   [UIScreen mainScreen].bounds.size.height
@@ -116,6 +117,18 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     }
     
     [self checkAuthorization];
+    
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [rightButton setTitle:@"新版样式" forState:UIControlStateNormal];
+    [rightButton setTitleColor:self.navigationController.navigationBar.tintColor forState:UIControlStateNormal];
+    rightButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    [rightButton sizeToFit];
+    [rightButton addTarget:self action:@selector(rightBarButtonItemAction:) forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+}
+
+- (void)rightBarButtonItemAction:(UIButton *)sender {
+    [self.navigationController pushViewController:[NewTakeVideoViewController new] animated:YES];
 }
 
 - (void)addAutoFocus{
@@ -376,6 +389,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     AVCaptureDevice *captureDevice = [self getCameraDeviceWithPositon:AVCaptureDevicePositionBack];//后置摄像头
     if (!captureDevice) {
         NSLog(@"获取摄像头失败");
+        _captureSession = nil;
         return;
     }
     
